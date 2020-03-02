@@ -3,13 +3,11 @@
 # @Author: BlackCatXJ
 # @FileName: infer.py
 # @Project: addr_reg
-import json
 
 import hg.parse_add
 import lqs.parse_add
 import wlb.parse_add
 import wyw.parse_add
-
 
 
 def print_addr_result(addr_dict):
@@ -36,5 +34,3 @@ if __name__ == '__main__':
             print("====== hg ======")
             hg_result = hg.parse_add.parse_address(line)
             print_addr_result(hg_result)
-
-
