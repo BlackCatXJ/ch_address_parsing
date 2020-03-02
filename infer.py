@@ -11,6 +11,7 @@ import wlb.parse_add
 import wyw.parse_add
 
 
+
 def print_addr_result(addr_dict):
     print("省: " + addr_dict["province"])
     print("市：" + addr_dict["city"])
@@ -32,8 +33,8 @@ if __name__ == '__main__':
             print("====== wyw ======")
             wyw_result = wyw.parse_add.parse_address(line)
             print_addr_result(wyw_result)
-            # print("====== hg ======")
-            # hg_result = hg.parse_add.parse_address(line)
-            # print_addr_result(hg_result)
+            print("====== hg ======")
+            hg_result = hg.parse_add.parse_address(line)
+            print_addr_result(hg_result)
 
 

@@ -1,12 +1,14 @@
+# coding=utf-8
 import json
 import re
 
-pri_suffix_list = ['省','维吾尔自治区','市','特别行政区','回族自治区','壮族自治区','自治区']
-dist_suffix_list = ['自治区','自治县','区','县','市']
-street_suffix_list = ['街道','乡','镇','地区']
-f = open('data/new_addr.txt', 'r+', encoding='utf-8')
+pri_suffix_list = ['省', '维吾尔自治区', '市', '特别行政区', '回族自治区', '壮族自治区', '自治区']
+dist_suffix_list = ['自治区', '自治县', '区', '县', '市']
+street_suffix_list = ['街道', '乡', '镇', '地区']
+f = open('data/new_addr.txt', 'r+')
 str_json = f.read()
 addr_dict = json.loads(str_json)
+
 
 def get_by_dict(input_str):
     address = {'province': '',
@@ -14,9 +16,9 @@ def get_by_dict(input_str):
                'district': '',
                'street': '',
                'other': ''
-            }
+               }
     for privs in addr_dict:
-        if address['province']!='':
+        if address['province'] != '':
             break
         pri = re_privince(privs['name'])
         if pri in input_str:
@@ -61,7 +63,7 @@ def get_city(address, input_str):
             reg_prefix = address['province']
         else:
             reg_prefix = re_privince(address['province'])
-    res = re.search('(?<='+ reg_prefix + ').+?(市|自治区|自治州)', input_str)
+    res = re.search('(?<=' + reg_prefix + ').+?(市|自治区|自治州)', input_str)
     if hasattr(res, 'group') and res.group(0) != '':
         address['city'] = res.group(0)
     return address
@@ -152,18 +154,19 @@ def re_city(city):
         city = city.replace('市', '')
     return city
 
-def  complet_addr(address):
-    if address['province'] !='' and address['city']!='' and address['district']!='':
+
+def complet_addr(address):
+    if address['province'] != '' and address['city'] != '' and address['district'] != '':
         return address
     else:
         for privs in addr_dict:
             for citys in privs['city']:
                 city = citys['name']
-                if city ==  address['city'] and address['province'] =='':
+                if city == address['city'] and address['province'] == '':
                     address['province'] = privs['name']
                 for areas in citys['area']:
                     if address['district'] == areas['name']:
-                        if address['province'] ==  '':
+                        if address['province'] == '':
                             address['province'] = privs['name']
                         if address['city'] == '':
                             address['city'] = city
@@ -185,6 +188,7 @@ def  complet_addr(address):
                                     if address['province'] == '':
                                         address['province'] = privs['name']
     return address
+
 
 def parse_address(text):
     text.replace(' ', '')
@@ -208,11 +212,13 @@ def re_district(district):
             break
     return district
 
+
 def re_street(street):
     for street_suffix in street_suffix_list:
         if street_suffix in street:
             street = street.replace(street_suffix, '')
     return street
+
 
 if __name__ == '__main__':
     input_str = '四川锦江督院街街道123'
