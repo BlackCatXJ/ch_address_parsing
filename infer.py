@@ -3,7 +3,6 @@
 # @Author: BlackCatXJ
 # @FileName: infer.py
 # @Project: addr_reg
-import json
 
 import hg.parse_add
 import lqs.parse_add
@@ -32,8 +31,6 @@ if __name__ == '__main__':
             print("====== wyw ======")
             wyw_result = wyw.parse_add.parse_address(line)
             print_addr_result(wyw_result)
-            # print("====== hg ======")
-            # hg_result = hg.parse_add.parse_address(line)
-            # print_addr_result(hg_result)
-
-
+            print("====== hg ======")
+            hg_result = hg.parse_add.parse_address(line)
+            print_addr_result(hg_result)
