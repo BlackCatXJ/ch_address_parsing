@@ -1,11 +1,28 @@
 import pandas as pd
 import re
+import wlb.ACautomaton as ac
 
 AREA_SUFFIXES = ["自治区", "省", "市", "区", "县"]
 PRO_CODE_LEN = 10
 CIT_CODE_LEN = 15
 DIS_CODE_LEN = 20
+IS_AC = True
 data = pd.DataFrame(pd.read_csv('wlb/area.txt', encoding='utf-8'))
+area_name = data['name'].values
+model = ac.Trie(area_name)
+no_suf = []
+for index in range(len(area_name)):
+    name = area_name[index]
+    flg = 1
+    for suf in AREA_SUFFIXES:
+        if name.endswith(suf):
+            tmp = name.replace(suf, '')
+            no_suf.append(tmp)
+            flg = 0
+            break
+    if flg:
+        no_suf.append(name)
+t_model = ac.Trie(no_suf)
 
 
 def parse_address(text):
@@ -16,8 +33,15 @@ def parse_address(text):
         "street": "",
         "other": ""
     }
-    forward_segment(text ,"",address)
-    index = f(address["district"],text)
+    if IS_AC:
+        get_address_ac(text, "", address)
+        fill_parent(address)
+        get_address_ac(text, AREA_SUFFIXES, address)
+    else:
+        get_address(text, "", address)
+        fill_parent(address)
+        get_address(text, AREA_SUFFIXES, address)
+    index = find_index(address["district"],text)
     if index != -1:
         text = text[index:]
         mat = re.match(".*?(镇|街道|街|乡镇|区|乡)", text, flags=0)
@@ -28,7 +52,23 @@ def parse_address(text):
     return address
 
 
-def forward_segment(text, suffix,address):
+def get_address_ac(text, suffix, address):
+    if (suffix == ""):
+        words = model.search(text)
+        for word in words.keys():
+            index = list(data['name']).index(word)
+            set_address(index,address)
+    else:
+        words = t_model.search(text)
+        for word in words.keys():
+            if len(word) <= 1:
+                continue
+            else:
+                index = no_suf.index(word)
+                set_address(index,address)
+
+
+def get_address(text, suffix, address):
     word_list = []
     i = 0
     while i < len(text):
@@ -37,13 +77,15 @@ def forward_segment(text, suffix,address):
             word = text[i: j]
             if(suffix == ""):
                 if word in data['name'].values:
-                    set_address(word,address)
+                    index = list(data['name']).index(word)
+                    set_address(index,address)
                     longest_word = word
                     break
             else:
                 for suf in AREA_SUFFIXES:
                     if word+suf in data['name'].values:
-                        set_address(word+suf, address)
+                        index = list(data['name']).index(word+suf)
+                        set_address(index, address)
                         longest_word = word
                         break
 
@@ -52,8 +94,8 @@ def forward_segment(text, suffix,address):
     return word_list
 
 
-def set_address(word,address):
-    index = list(data['name']).index(word)
+def set_address(index,address):
+    word = data['name'][index]
     code = '0000'+str(data['code'][index])
     if len(code) == PRO_CODE_LEN and address['province'] == "":
         address['province'] = word
@@ -63,12 +105,12 @@ def set_address(word,address):
         address['district'] = word
 
 
-def f(area,text):
+def find_index(area,text):
     temp = text.find(area)
-    if temp ==-1:
+    if temp == -1:
         for s in AREA_SUFFIXES:
-            tmp=area.replace(s,"")
-            temp=text.find(tmp)
+            tmp = area.replace(s,"")
+            temp = text.find(tmp)
             if temp == -1:
                 continue
             else: return temp+len(tmp)
@@ -78,9 +120,13 @@ def f(area,text):
 
 def fill_parent(address):
     if address['city'] != "" and address['province'] == "":
-        index = list(data['name']).index(address['city'])-1
-        address['province'] = data['name'][data['parent_id'][index]]
+        index = list(data['name']).index(address['city'])
+        print(data['parent_id'][index])
+        address['province'] = data['name'][data['parent_id'][index]-1]
     if address['district'] != "" and address['city'] == "":
-        index = list(data['name']).index(address['district'])-1
-        address['city'] = data['name'][data['parent_id'][index]]
-        fill_parent(data)
+        index = list(data['name']).index(address['district'])
+        address['city'] = data['name'][data['parent_id'][index]-1]
+        fill_parent(address)
+
+
+parse_address("湖北武汉")
