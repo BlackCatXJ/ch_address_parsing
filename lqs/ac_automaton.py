@@ -125,9 +125,63 @@ class Trie(object):
             i = i + 1
         return rst
 
+    def most_long_search(self, text):
+        """
+        只匹配出最长的字符串，比如词典有：湖南、南京市   输入 湖南京市  只得到南京市
+        如果词典有 湖南、南京  输入 湖南京， 只得到湖南
+        :param self:
+        :param text: 长文本
+        :return:
+        """
+        p = self.root
+        # 成功匹配结果集
+        rst = defaultdict(list)
+        text_len = len(text)
+        last_word = ''
+        last_end_pos = 0
+        last_start_pos = 0
+        i = 0
+        while i < text_len:
+            single_char = text[i]
+            while single_char not in p.children and p is not self.root:
+                p = p.fail
+            # 若找到匹配成功的字符结点，则指向那个结点，否则指向根结点
+            if single_char in p.children:
+                p = p.children[single_char]
+            else:
+                p = self.root
+            temp = p
+            # 识别出最长的串
+            if temp.tail:
+                if text_len <= i + 1 or text[i + 1] not in temp.children :
+                    now_start_pos = i - len(self.words[temp.tail - 1]) + 1
+                    now_word = self.words[temp.tail - 1]
+                    if (last_end_pos == 0):
+                        last_word = now_word
+                        last_end_pos = i
+                        last_start_pos = now_start_pos
+                    elif last_end_pos >= now_start_pos and len(last_word) < len(now_word) :
+                        last_word = now_word
+                        last_end_pos = i
+                        last_start_pos = now_start_pos
+                    elif last_end_pos >= now_start_pos and len(last_word) >= len(now_word) :
+                        continue
+                    elif last_end_pos < now_start_pos:
+                        rst[last_word].append((last_start_pos, last_end_pos))
+                        last_word = now_word
+                        last_end_pos = i
+                        last_start_pos = now_start_pos
+                        temp = temp.fail
+                        # 加上这句，湖南京，只会匹配到湖南，不会匹配出南京
+                        #p = self.root
+            i = i + 1
+        rst[last_word].append((last_start_pos, last_end_pos))
+        return rst
 
 if __name__ == "__main__":
-    test_words = ["she", "he","say","shr","her","ha","haha","a"]
-    test_text = "hahayasherhs"
+    # test_words = ["she", "he","say","shr","herr","ha","haha","a"]
+    # test_text = "hahayasherrhs"
+    test_words = ["湖南", "南京", "湖南京", "南京市区"]
+    test_text = "湖南京市区湖南京市区湖南京市区湖南京市区湖南"
     model = Trie(test_words)
-    print(str(model.search(test_text)))
+    print(str(model.most_long_search(test_text)))
