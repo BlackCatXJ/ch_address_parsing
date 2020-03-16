@@ -1,4 +1,5 @@
-
+import operator
+lastWord={'word':"",'len':"","i":''}
 class node(object):
     def __init__(self):
         self.next = {}       #相当于指针，指向树节点的下一层节点
@@ -47,15 +48,15 @@ class ac_automation(object):
             word = content[currentposition]
             while word not in p.next and p != self.root:  # 搜索状态机，直到匹配
                 p = p.fail
-
             if word in p.next:
                 p = p.next[word]
             else:
                 p = self.root
-
             if p.isWord:  # 若状态到达标签结尾，就添加入结果中
                 result.append(p.word)
+                lastWord = {'word': "", 'len': "", "i": ''}
             currentposition += 1
+        return result
 
     def dosearch(self,p,result):
         if p.isWord:
@@ -75,8 +76,53 @@ class ac_automation(object):
                 p = p.next[word]
             currentposition += 1
         ac_automation.dosearch(self,p,result)
+    def handleOver(self,have):
+        have = sorted(have, key=operator.itemgetter('len'), reverse=True)
+        temp=[]
+        temp.append(have[0])
+        for i in range(1,have.__len__()):
+            flag = False
+            for j in range(temp.__len__()):
+                if have[i]["j"]>=temp[j]["i"] and have[i]["j"]<=temp[j]["j"]:
+                    flag=True
+                    break
+                if have[i]["i"]>=temp[j]["i"] and have[i]["i"]<=temp[j]["j"]:
+                    flag = True
+                    break
+            if flag==False:
+                temp.append(have[i])
+        arr=[]
+        for key in temp:
+            arr.append(key["word"])
+        return arr
+    def longest_search(self,content):
+        p = self.root
+        result = []
+        have=[]
+        currentposition = 0  # 用来标记当前标签的汉字
+        while currentposition < len(content):
+            word = content[currentposition]
+            while word not in p.next and p != self.root:  # 搜索状态机，直到匹配
+                p = p.fail
+            if p==self.root:
+                if have.__len__()!=0:
+                    result.append(ac_automation.handleOver(self,have))
+                have=[]
+            if word in p.next:
+                p = p.next[word]
+            else:
+                p = self.root
+            if p.isWord:  # 若状态到达标签结尾，就添加入结果中
+               have.append({'word':p.word,'i':currentposition-len(p.word)+1,'j':currentposition,'len':len(p.word)})
+            currentposition += 1
+        if have.__len__() != 0:
+            result.append(ac_automation.handleOver(self,have))
         return result
 
-
-
-
+if __name__ == '__main__':
+    ac = ac_automation()
+    ac.add('湖南')
+    ac.add('南京北')
+    ac.add('湖南京北')
+    ac.make_fail()
+    print(ac.longest_search("湖南京北"))
