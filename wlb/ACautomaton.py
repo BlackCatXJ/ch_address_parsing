@@ -86,9 +86,74 @@ class Trie(object):
                 start_index = i
                 p = self.root
             temp = p
-            while temp is not self.root:
-                if temp.tail:
+            # while temp is not self.root:
+            #     if temp.tail:
+            #         rst[self.words[temp.tail - 1]].append((start_index, i))
+            #     temp = temp.fail
+            if temp.tail:
+                if len(text) <= i+1 or text[i+1] not in temp.children:
                     rst[self.words[temp.tail - 1]].append((start_index, i))
-                temp = temp.fail
+                    p = self.root
         return rst
 
+    def longest_search(self, text):
+        p = self.root
+        index = 0
+        # 成功匹配结果集
+        rst = []
+        tmp_rst = []
+        for i in range(len(text)):
+            single_char = text[i]
+            while single_char not in p.children and p is not self.root:
+                p = p.fail
+            if single_char in p.children:
+                p = p.children[single_char]
+            else:
+                p = self.root
+            temp = p
+            if temp.tail:
+                tmp_word = self.words[temp.tail - 1]
+                if len(tmp_rst):
+                    if i - len(tmp_word) < index:
+                        tmp_rst.append(tmp_word)
+                    else:
+                        longest_word = ""
+                        for t_word in tmp_rst:
+                            if len(t_word) > len(longest_word):
+                                longest_word = t_word
+                        rst.append(longest_word)
+                        tmp_rst = [tmp_word]
+                        index = i
+                else:
+                    index = i
+                    tmp_rst.append(tmp_word)
+                if i == len(text)-1:
+                    longest_word = ""
+                    for t_word in tmp_rst:
+                        if len(t_word) > len(longest_word):
+                            longest_word = t_word
+                    rst.append(longest_word)
+        return rst
+
+
+data = pd.DataFrame(pd.read_csv('area.txt', encoding='utf-8'))
+area_name = data['name'].values
+t_model = Trie(area_name)
+no_suf = []
+AREA_SUFFIXES = ["自治区", "省", "市", "区", "县"]
+for index in range(len(area_name)):
+    name = area_name[index]
+    flg = 1
+    for suf in AREA_SUFFIXES:
+        if name.endswith(suf):
+            tmp = name.replace(suf, '')
+            no_suf.append(tmp)
+            flg = 0
+            break
+    if flg:
+        no_suf.append(name)
+test = ["湖南","南京市"]
+no_suf.append("南京市")
+no_suf.remove("青")
+model = Trie(no_suf)
+print(model.longest_search("青海南京"))
