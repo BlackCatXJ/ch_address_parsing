@@ -41,7 +41,6 @@ class Trie(object):
             else:
                 cur_node = cur_node.children[item]
         cur_node.tail = self.count
-        cur_node.length = len(sequence)
 
     def ac_automation(self):
         queue = [self.root]
